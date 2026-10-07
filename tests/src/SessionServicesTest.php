@@ -46,6 +46,7 @@ final class SessionServicesTest extends TestCase
         'SESSION_COOKIE_SECURE',
         'SESSION_COOKIE_HTTP_ONLY',
         'SESSION_COOKIE_SAMESITE',
+        'SESSION_CACHE_EXPIRE_MINUTES',
     ];
 
     private string $savePath;
@@ -154,6 +155,24 @@ final class SessionServicesTest extends TestCase
         $this->assertStringNotContainsString('Secure', $cookie);
         $this->assertStringNotContainsString('HttpOnly', $cookie);
         $this->assertStringContainsString('SameSite=Strict', $cookie);
+    }
+
+    #[Test]
+    public function theDurationsAreGivenInSecondsAndMinutes(): void
+    {
+        putenv('SESSION_LIFETIME_SECONDS=120');
+        putenv('SESSION_CACHE_EXPIRE_MINUTES=15');
+
+        $container = $this->container();
+        $cookie = $this->cookie($container, fn (SessionInterface $s) => $s->set('a', 1));
+
+        $this->assertNotNull($cookie);
+        $this->assertMatchesRegularExpression('/Max-Age=1[12]\d/', $cookie);
+
+        $persistence = $container->get(SessionMiddleware::class);
+        $this->assertInstanceOf(SessionMiddleware::class, $persistence);
+        $property = (new \ReflectionObject($persistence))->getProperty('persistence');
+        $this->assertSame(15, (new \ReflectionObject($property->getValue($persistence)))->getProperty('cacheExpire')->getValue($property->getValue($persistence)));
     }
 
     #[Test]
