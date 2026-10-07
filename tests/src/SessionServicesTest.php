@@ -40,7 +40,7 @@ final class SessionServicesTest extends TestCase
 {
     private const VARIABLES = [
         'SESSION_NAME',
-        'SESSION_LIFETIME',
+        'SESSION_LIFETIME_SECONDS',
         'SESSION_COOKIE_PATH',
         'SESSION_COOKIE_DOMAIN',
         'SESSION_COOKIE_SECURE',

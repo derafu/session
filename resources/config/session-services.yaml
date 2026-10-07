@@ -14,14 +14,14 @@
 parameters:
     # The defaults of the variables are strings, as Symfony asks for.
     env(SESSION_NAME): 'DERAFU_SESSION'
-    env(SESSION_LIFETIME): '3600'
+    env(SESSION_LIFETIME_SECONDS): '3600'
     env(SESSION_COOKIE_PATH): '/'
     env(SESSION_COOKIE_DOMAIN): ''
     env(SESSION_COOKIE_SECURE): 'true'
     env(SESSION_COOKIE_HTTP_ONLY): 'true'
     env(SESSION_COOKIE_SAMESITE): 'Lax'
     env(SESSION_CACHE_LIMITER): 'nocache'
-    env(SESSION_CACHE_EXPIRE): '180'
+    env(SESSION_CACHE_EXPIRE_MINUTES): '180'
 
 services:
 
@@ -40,14 +40,14 @@ services:
         arguments:
             $sessionConfig:
                 name: '%env(default::string:SESSION_NAME)%'
-                cookie_lifetime: '%env(default::int:SESSION_LIFETIME)%'
+                cookie_lifetime: '%env(default::int:SESSION_LIFETIME_SECONDS)%'
                 cookie_path: '%env(default::string:SESSION_COOKIE_PATH)%'
                 cookie_domain: '%env(default::string:SESSION_COOKIE_DOMAIN)%'
                 cookie_secure: '%env(default::bool:SESSION_COOKIE_SECURE)%'
                 cookie_httponly: '%env(default::bool:SESSION_COOKIE_HTTP_ONLY)%'
                 cookie_samesite: '%env(default::string:SESSION_COOKIE_SAMESITE)%'
                 cache_limiter: '%env(default::string:SESSION_CACHE_LIMITER)%'
-                cache_expire: '%env(default::int:SESSION_CACHE_EXPIRE)%'
+                cache_expire: '%env(default::int:SESSION_CACHE_EXPIRE_MINUTES)%'
 
     # Flash messages configuration.
     Mezzio\Flash\FlashMessageMiddleware: ~
