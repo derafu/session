@@ -1,0 +1,53 @@
+{
+    "name": "derafu/session",
+    "description": "Derafu: Session - Wiring of the session and the flash messages of Mezzio",
+    "type": "library",
+    "homepage": "https://www.derafu.dev/docs/core/session",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Esteban De La Fuente Rubio / Derafu",
+            "homepage": "https://www.derafu.dev"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/derafu/session/issues",
+        "source": "https://github.com/derafu/session"
+    },
+    "autoload": {
+        "psr-4": {
+            "Derafu\\Session\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Derafu\\TestsSession\\": "tests/src/"
+        }
+    },
+    "require": {
+        "php": "^8.5",
+        "mezzio/mezzio-flash": "^1.10",
+        "mezzio/mezzio-session": "^1.17",
+        "mezzio/mezzio-session-ext": "^1.21"
+    },
+    "require-dev": {
+        "ext-xdebug": "*",
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.2",
+        "phpunit/phpunit": "^13.4",
+        "symfony/dependency-injection": "^8.1",
+        "symfony/config": "^8.1",
+        "symfony/yaml": "^8.1",
+        "laminas/laminas-diactoros": "^3.8"
+    },
+    "scripts": {
+        "docs": "php tools/phpdocumentor run --config=phpdoc.xml",
+        "tests": "XDEBUG_MODE=coverage vendor/bin/phpunit --configuration=phpunit.xml",
+        "phpcs-fix": "vendor/bin/php-cs-fixer fix -v --config=php-cs-fixer.php",
+        "phpcs": "vendor/bin/php-cs-fixer fix -v --dry-run --diff --config=php-cs-fixer.php",
+        "phpstan": "vendor/bin/phpstan analyse --configuration=phpstan.neon --memory-limit=1G",
+        "phpstan-export": "vendor/bin/phpstan analyse --configuration=phpstan.neon --level 9 --generate-baseline"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

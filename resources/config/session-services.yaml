@@ -1,0 +1,53 @@
+# Wiring of the session and the flash messages of Mezzio, with the session of
+# PHP, for applications that use symfony/dependency-injection. Import it from
+# your own services.yaml (derafu/foundation does it for a site):
+#
+#   imports:
+#       - { resource: '../vendor/derafu/session/resources/config/session-services.yaml' }
+#
+# The middlewares go in the pipeline after the router, and the flash messages
+# after the session:
+#
+#   - '@Mezzio\Session\SessionMiddleware'
+#   - '@Mezzio\Flash\FlashMessageMiddleware'
+
+parameters:
+    # The defaults of the variables are strings, as Symfony asks for.
+    env(SESSION_NAME): 'DERAFU_SESSION'
+    env(SESSION_LIFETIME): '3600'
+    env(SESSION_COOKIE_PATH): '/'
+    env(SESSION_COOKIE_DOMAIN): ''
+    env(SESSION_COOKIE_SECURE): 'true'
+    env(SESSION_COOKIE_HTTP_ONLY): 'true'
+    env(SESSION_COOKIE_SAMESITE): 'Lax'
+    env(SESSION_CACHE_LIMITER): 'nocache'
+    env(SESSION_CACHE_EXPIRE): '180'
+
+services:
+
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    # Session configuration.
+    Mezzio\Session\SessionMiddleware:
+        arguments:
+            $persistence: '@Mezzio\Session\SessionPersistenceInterface'
+
+    Mezzio\Session\SessionPersistenceInterface:
+        factory: [Mezzio\Session\Ext\PhpSessionPersistence, fromConfigArray]
+        arguments:
+            $sessionConfig:
+                name: '%env(default::string:SESSION_NAME)%'
+                cookie_lifetime: '%env(default::int:SESSION_LIFETIME)%'
+                cookie_path: '%env(default::string:SESSION_COOKIE_PATH)%'
+                cookie_domain: '%env(default::string:SESSION_COOKIE_DOMAIN)%'
+                cookie_secure: '%env(default::bool:SESSION_COOKIE_SECURE)%'
+                cookie_httponly: '%env(default::bool:SESSION_COOKIE_HTTP_ONLY)%'
+                cookie_samesite: '%env(default::string:SESSION_COOKIE_SAMESITE)%'
+                cache_limiter: '%env(default::string:SESSION_CACHE_LIMITER)%'
+                cache_expire: '%env(default::int:SESSION_CACHE_EXPIRE)%'
+
+    # Flash messages configuration.
+    Mezzio\Flash\FlashMessageMiddleware: ~

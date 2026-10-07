@@ -1,0 +1,7 @@
+parameters:
+    # Review level, from basic (1) to very thorough (9).
+    level: 5
+    # Source code directories to be reviewed.
+    paths:
+        - src
+        - tests

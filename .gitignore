@@ -1,0 +1,48 @@
+# PHP files and directories.
+var/
+vendor/
+composer.lock
+
+# IDE and editor specific files.
+.idea/
+.vscode/
+*.sublime-*
+*.swp
+*.swo
+*~
+.project
+.buildpath
+.settings/
+
+# OS specific files.
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Environment and configuration files.
+.env
+.env.local
+.env.*.local
+*.env.local
+.env.backup
+
+# Log files.
+*.log
+logs/
+
+# Build and compilation files.
+dist/
+build/
+
+# Other common files and directories to ignore.
+.sass-cache/
+.tmp/
+.htaccess
+*.bak
+*.cache
+*.tmp
