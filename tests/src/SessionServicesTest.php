@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\TestsSession;
 
+use Closure;
 use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\ServerRequest;
 use Mezzio\Flash\FlashMessageMiddleware;
@@ -46,6 +47,7 @@ final class SessionServicesTest extends TestCase
         'SESSION_COOKIE_SECURE',
         'SESSION_COOKIE_HTTP_ONLY',
         'SESSION_COOKIE_SAMESITE',
+        'SESSION_CACHE_LIMITER',
         'SESSION_CACHE_EXPIRE_MINUTES',
     ];
 
@@ -57,7 +59,9 @@ final class SessionServicesTest extends TestCase
     {
         $this->savePath = sys_get_temp_dir() . '/derafu-session-test-' . bin2hex(random_bytes(4));
         mkdir($this->savePath);
-        $this->previousSavePath = session_save_path();
+        $previousSavePath = session_save_path();
+        $this->assertIsString($previousSavePath);
+        $this->previousSavePath = $previousSavePath;
         session_save_path($this->savePath);
     }
 
@@ -99,6 +103,16 @@ final class SessionServicesTest extends TestCase
      */
     private function cookie(ContainerBuilder $container, callable $callback, ?string $sid = null, ?string $name = null): ?string
     {
+        return $this->response($container, $callback, $sid, $name)->getHeaderLine('Set-Cookie') ?: null;
+    }
+
+    /**
+     * Handles a request through the configured session middleware.
+     *
+     * @param callable(SessionInterface): void $callback What is done with the session.
+     */
+    private function response(ContainerBuilder $container, callable $callback, ?string $sid = null, ?string $name = null): ResponseInterface
+    {
         $middleware = $container->get(SessionMiddleware::class);
         $this->assertInstanceOf(SessionMiddleware::class, $middleware);
 
@@ -107,8 +121,9 @@ final class SessionServicesTest extends TestCase
             $request = $request->withCookieParams([$name ?? 'DERAFU_SESSION' => $sid]);
         }
 
-        $response = $middleware->process($request, new class ($callback) implements RequestHandlerInterface {
-            public function __construct(private readonly mixed $callback)
+        return $middleware->process($request, new class (Closure::fromCallable($callback)) implements RequestHandlerInterface {
+            /** @param Closure(SessionInterface): void $callback */
+            public function __construct(private readonly Closure $callback)
             {
             }
 
@@ -121,8 +136,6 @@ final class SessionServicesTest extends TestCase
                 return new EmptyResponse();
             }
         });
-
-        return $response->getHeaderLine('Set-Cookie') ?: null;
     }
 
     #[Test]
@@ -162,17 +175,16 @@ final class SessionServicesTest extends TestCase
     {
         putenv('SESSION_LIFETIME_SECONDS=120');
         putenv('SESSION_CACHE_EXPIRE_MINUTES=15');
+        putenv('SESSION_CACHE_LIMITER=private');
 
         $container = $this->container();
-        $cookie = $this->cookie($container, fn (SessionInterface $s) => $s->set('a', 1));
+        $response = $this->response($container, fn (SessionInterface $s) => $s->set('a', 1));
+        $cookie = $response->getHeaderLine('Set-Cookie');
 
-        $this->assertNotNull($cookie);
+        $this->assertNotSame('', $cookie);
         $this->assertMatchesRegularExpression('/Max-Age=1[12]\d/', $cookie);
 
-        $persistence = $container->get(SessionMiddleware::class);
-        $this->assertInstanceOf(SessionMiddleware::class, $persistence);
-        $property = (new \ReflectionObject($persistence))->getProperty('persistence');
-        $this->assertSame(15, (new \ReflectionObject($property->getValue($persistence)))->getProperty('cacheExpire')->getValue($property->getValue($persistence)));
+        $this->assertSame('private, max-age=900', $response->getHeaderLine('Cache-Control'));
     }
 
     #[Test]
@@ -181,7 +193,9 @@ final class SessionServicesTest extends TestCase
         $container = $this->container();
         $cookie = $this->cookie($container, fn (SessionInterface $s) => $s->set('name', 'Ana'));
         $this->assertNotNull($cookie);
-        preg_match('/^DERAFU_SESSION=([^;]+)/', $cookie, $matches);
+        if (preg_match('/^DERAFU_SESSION=([^;]+)/', $cookie, $matches) !== 1) {
+            $this->fail('The session cookie must contain a session identifier.');
+        }
 
         $seen = null;
         $again = $this->cookie($container, function (SessionInterface $s) use (&$seen): void {
